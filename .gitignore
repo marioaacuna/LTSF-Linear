@@ -11,7 +11,20 @@ __pycache__/
 *_checkpoints/
 
 # Large data files (use Git LFS if needed)
-DATA_MA/xNormF.csv
-DATA_MA/xNormF.mat
-DATA_MA/normalized_data.csv
-DATA_MA/xNorm.csv
+*.csv
+*.mat
+*.npy
+*.npz
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.parquet
+*.feather
+*.zarr/
+*.nc
+*.tif
+*.tiff
+*.pt
+DATA_MA/
+results_data/
