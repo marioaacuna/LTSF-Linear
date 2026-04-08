@@ -9,3 +9,9 @@ logs/
 .vscode/
 __pycache__/
 *_checkpoints/
+
+# Large data files (use Git LFS if needed)
+DATA_MA/xNormF.csv
+DATA_MA/xNormF.mat
+DATA_MA/normalized_data.csv
+DATA_MA/xNorm.csv
