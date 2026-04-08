@@ -11,20 +11,26 @@ __pycache__/
 *_checkpoints/
 
 # Large data files (use Git LFS if needed)
-*.csv
-*.mat
-*.npy
-*.npz
-*.h5
-*.hdf5
-*.pkl
-*.pickle
-*.parquet
-*.feather
-*.zarr/
-*.nc
-*.tif
-*.tiff
-*.pt
-DATA_MA/
+# Exclude data files but keep MATLAB code
+DATA_MA/*.csv
+DATA_MA/*.npy
+DATA_MA/*.npz
+DATA_MA/*.h5
+DATA_MA/*.hdf5
+DATA_MA/*.pkl
+DATA_MA/*.pickle
+DATA_MA/*.parquet
+DATA_MA/*.feather
+DATA_MA/*.zarr/
+DATA_MA/*.nc
+DATA_MA/*.tif
+DATA_MA/*.tiff
+DATA_MA/*.pt
+# Keep MAT files that are small, exclude large ones via size
+# Actually exclude specific large mat files
+DATA_MA/xNormF.mat
+DATA_MA/xNorm.csv
+DATA_MA/normalized_data.csv
+
+# Other results directories
 results_data/
