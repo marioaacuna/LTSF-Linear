@@ -34,3 +34,5 @@ DATA_MA/normalized_data.csv
 
 # Other results directories
 results_data/
+
+Analysis_MA/data/*
