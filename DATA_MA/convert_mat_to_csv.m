@@ -1,5 +1,5 @@
 % filepath: /home/mario/Documents/Transformer_AR_test/convert_mat_to_csv.m
-function convert_mat_to_csv(mat_filename)
+function convert_mat_to_csv(mat_filename, output_filename)
     % Load the .mat file and get the first variable regardless of its name
     data = load(mat_filename);
     varNames = fieldnames(data);
@@ -19,5 +19,5 @@ function convert_mat_to_csv(mat_filename)
     T = addvars(T, Date, 'Before', 1, 'NewVariableNames', 'date');
     
     % Save the table as CSV file
-    writetable(T, 'xNorm.csv');
+    writetable(T, output_filename);
 end

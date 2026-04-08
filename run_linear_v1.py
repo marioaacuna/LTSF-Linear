@@ -21,10 +21,10 @@ if not os.path.exists("./logs/LongForecasting"):
     os.makedirs("./logs/LongForecasting")
 #%%
 # Configuration parameters
-seq_len = 75          # Input window size (~7.7 seconds at 12.5Hz)
+seq_len = 96          # Input window size (~7.7 seconds at 12.5Hz)
 pred_len = 12         # Prediction horizon (1 second)
 n_features = 66       # Number of features in your dataset
-model_name = "Linear"
+model_name = "DLinear"
 
 # Create args as dotdict
 args = dotdict()
@@ -38,7 +38,7 @@ args.train_only = False
 # Data loader configuration
 args.data = 'custom'
 args.root_path = './DATA_MA'
-args.data_path = 'xNorm.csv'
+args.data_path = 'normalized_data.csv'
 args.features = 'M'
 args.target = 'F66'
 args.freq = 'ms'
