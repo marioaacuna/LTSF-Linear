@@ -2,8 +2,8 @@
 % Figure 2 draft — DLinear prediction analysis separated by cohort.
 %
 % Generates per-cohort comparison plots (Control vs Pain):
-%   Cohort 1 — SFC: S (Sham) vs F (Formalin)
-%   Cohort 2 — HNG: H (Hargreaves) vs N (Neuropathic)
+%   Cohort 1 — SFC: S (Saline) vs F (Formalin)
+%   Cohort 2 — HNG: H (Sham) vs N (Neuropathic)
 %
 % For each cohort:
 %   1. Error metrics by prediction horizon (MAE, RMSE, MAPE, Correlation)
@@ -44,24 +44,33 @@ set(groot, 'defaultAxesYColor', 'black');
 seq_len  = 96;
 pred_len = 12;
 
+% Set to true when results were produced with --pca flag
+use_pca  = true;
+
 cohorts = struct();
 
 cohorts(1).name         = 'SFC';
-cohorts(1).display_name = 'SFC — Sham vs Formalin';
+cohorts(1).display_name = 'SFC — Saline vs Formalin';
 cohorts(1).conditions   = {'S', 'F'};
-cohorts(1).cond_labels  = {'Sham (Control)', 'Formalin (Pain)'};
+cohorts(1).cond_labels  = {'Saline (Control)', 'Formalin (Pain)'};
 cohorts(1).cond_colors  = [0.2 0.6 0.9; 0.9 0.2 0.2];
 
 cohorts(2).name         = 'HNG';
-cohorts(2).display_name = 'HNG — Hargreaves vs Neuropathic';
+cohorts(2).display_name = 'HNG — Sham vs Neuropathic';
 cohorts(2).conditions   = {'H', 'N'};
-cohorts(2).cond_labels  = {'Hargreaves (Control)', 'Neuropathic (Pain)'};
+cohorts(2).cond_labels  = {'Sham (Control)', 'Neuropathic (Pain)'};
 cohorts(2).cond_colors  = [0.2 0.7 0.4; 0.8 0.4 0.0];
 
 %% Helper: build setting string (must match run_all_conditions.py) ========
+if use_pca
+    pca_suffix = '_pca';
+else
+    pca_suffix = '';
+end
+
 build_setting = @(tag) sprintf( ...
-    'MA_%s_%d_%d_DLinear_custom_ftM_sl%d_pl%d_inTrue_it1_lr0.0001_bs32', ...
-    tag, seq_len, pred_len, seq_len, pred_len);
+    'MA_%s%s_%d_%d_DLinear_custom_ftM_sl%d_pl%d_inTrue_it1_lr0.0001_bs32', ...
+    tag, pca_suffix, seq_len, pred_len, seq_len, pred_len);
 
 %% ========================================================================
 %  MAIN LOOP — one full set of figures per cohort
@@ -179,8 +188,8 @@ for ch = 1:length(cohorts)
         'FontSize', 14, 'FontWeight', 'bold');
 
     exportgraphics(fig1, fullfile(fig_output, ...
-        sprintf('Fig02_%s_error_metrics.pdf', cohort.name)), 'ContentType', 'vector');
-    fprintf('  Exported: Fig02_%s_error_metrics.pdf\n', cohort.name);
+        sprintf('Fig02_%s%s_error_metrics.pdf', cohort.name, pca_suffix)), 'ContentType', 'vector');
+    fprintf('  Exported: Fig02_%s%s_error_metrics.pdf\n', cohort.name, pca_suffix);
 
     % =====================================================================
     %  FIGURE 2: Scatter — Preds vs Truth at selected horizons (feature 1)
@@ -214,8 +223,8 @@ for ch = 1:length(cohorts)
         cohort.display_name, feat_idx), 'FontSize', 14, 'FontWeight', 'bold');
 
     exportgraphics(fig2, fullfile(fig_output, ...
-        sprintf('Fig02_%s_scatter.pdf', cohort.name)), 'ContentType', 'vector');
-    fprintf('  Exported: Fig02_%s_scatter.pdf\n', cohort.name);
+        sprintf('Fig02_%s%s_scatter.pdf', cohort.name, pca_suffix)), 'ContentType', 'vector');
+    fprintf('  Exported: Fig02_%s%s_scatter.pdf\n', cohort.name, pca_suffix);
 
     % =====================================================================
     %  FIGURE 3: Zoomed timeline — avg prediction vs ground truth
@@ -258,6 +267,13 @@ for ch = 1:length(cohorts)
             if numel(vals) > 1, pred_std(pos) = std(vals); end
         end
 
+        % --- Per-feature metrics for feat_idx (used in annotation) ------
+        ph_feat = reshape(p(:, :, feat_idx), [], 1);
+        th_feat = reshape(t(:, :, feat_idx), [], 1);
+        feat_mae  = mean(abs(ph_feat - th_feat));
+        feat_rmse = sqrt(mean((ph_feat - th_feat).^2));
+        feat_corr = corr(ph_feat, th_feat);
+
         % Zoom window
         zoom_len   = min(3000, total_frames);
         zoom_start = min(15000, total_frames - zoom_len + 1);
@@ -284,10 +300,10 @@ for ch = 1:length(cohorts)
         grid on; box off;
         ylim([-2 2]); xlim([zoom_start zoom_end]);
 
-        % Annotation box
+        % Annotation box — metrics specific to the plotted feature
         text(zoom_start + 0.02*zoom_len, 1.5, ...
             sprintf('MAE: %.4f\nRMSE: %.4f\nCorr: %.4f', ...
-            global_mae(c), global_rmse(c), global_corr(c)), ...
+            feat_mae, feat_rmse, feat_corr), ...
             'FontSize', 9, 'BackgroundColor', [1 1 1 0.7], 'EdgeColor', 'k', 'Margin', 3);
     end
 
@@ -295,8 +311,8 @@ for ch = 1:length(cohorts)
         cohort.display_name, feat_idx), 'FontSize', 14, 'FontWeight', 'bold');
 
     exportgraphics(fig3, fullfile(fig_output, ...
-        sprintf('Fig02_%s_timeline.pdf', cohort.name)), 'ContentType', 'vector');
-    fprintf('  Exported: Fig02_%s_timeline.pdf\n', cohort.name);
+        sprintf('Fig02_%s%s_timeline.pdf', cohort.name, pca_suffix)), 'ContentType', 'vector');
+    fprintf('  Exported: Fig02_%s%s_timeline.pdf\n', cohort.name, pca_suffix);
 
     % =====================================================================
     %  Print summary table

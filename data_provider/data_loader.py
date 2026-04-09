@@ -70,7 +70,7 @@ class Dataset_ETT_hour(Dataset):
             df_stamp['day'] = df_stamp.date.apply(lambda row: row.day)
             df_stamp['weekday'] = df_stamp.date.apply(lambda row: row.weekday())
             df_stamp['hour'] = df_stamp.date.apply(lambda row: row.hour)
-            data_stamp = df_stamp.drop(columns=['date']).values
+            data_stamp = df_stamp.drop(columns=['date']).values.astype(np.float32)
         elif self.timeenc == 1:
             data_stamp = time_features(pd.to_datetime(df_stamp['date'].values), freq=self.freq)
             data_stamp = data_stamp.transpose(1, 0)
@@ -160,7 +160,7 @@ class Dataset_ETT_minute(Dataset):
             df_stamp['hour'] = df_stamp.date.apply(lambda row: row.hour)
             df_stamp['minute'] = df_stamp.date.apply(lambda row: row.minute)
             df_stamp['minute'] = df_stamp.minute.map(lambda x: x // 15)
-            data_stamp = df_stamp.drop(columns=['date']).values
+            data_stamp = df_stamp.drop(columns=['date']).values.astype(np.float32)
         elif self.timeenc == 1:
             data_stamp = time_features(pd.to_datetime(df_stamp['date'].values), freq=self.freq)
             data_stamp = data_stamp.transpose(1, 0)
@@ -264,7 +264,7 @@ class Dataset_Custom(Dataset):
             df_stamp['day'] = df_stamp.date.apply(lambda row: row.day)
             df_stamp['weekday'] = df_stamp.date.apply(lambda row: row.weekday())
             df_stamp['hour'] = df_stamp.date.apply(lambda row: row.hour)
-            data_stamp = df_stamp.drop(columns=['date']).values
+            data_stamp = df_stamp.drop(columns=['date']).values.astype(np.float32)
         elif self.timeenc == 1:
             data_stamp = time_features(pd.to_datetime(df_stamp['date'].values), freq=self.freq)
             data_stamp = data_stamp.transpose(1, 0)
@@ -367,7 +367,7 @@ class Dataset_Pred(Dataset):
             df_stamp['hour'] = df_stamp.date.apply(lambda row: row.hour)
             df_stamp['minute'] = df_stamp.date.apply(lambda row: row.minute)
             df_stamp['minute'] = df_stamp.minute.map(lambda x: x // 15)
-            data_stamp = df_stamp.drop(columns=['date']).values
+            data_stamp = df_stamp.drop(columns=['date']).values.astype(np.float32)
         elif self.timeenc == 1:
             data_stamp = time_features(pd.to_datetime(df_stamp['date'].values), freq=self.freq)
             data_stamp = data_stamp.transpose(1, 0)

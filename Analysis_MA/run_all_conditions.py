@@ -8,17 +8,20 @@ mirroring the pipeline in run_linear_v1.py but looping over:
   HNG_H  (Hargreaves)   HNG_N  (Neuropathic)
 
 Expected CSV files in Analysis_MA/data/:
-  SFC_S_normalized.csv, SFC_F_normalized.csv,
-  HNG_H_normalized.csv, HNG_N_normalized.csv
+  *_normalized.csv      -> date, F1, F2, ..., F66   (all 66 features)
+  *_normalized_pca.csv  -> date, PC1, PC2, ..., PCK  (PCA-reduced features)
 
-Each CSV has columns: date, F1, F2, ..., F66
+Set use_pca = True below (or pass --pca on the command line) to run
+with PCA-reduced features instead of the original 66.
 
 Usage:
-  python Analysis_MA/run_all_conditions.py
+  python Analysis_MA/run_all_conditions.py          # original 66 features
+  python Analysis_MA/run_all_conditions.py --pca    # PCA-reduced features
 """
 
 import os
 import sys
+import csv
 import torch
 import random
 import numpy as np
@@ -30,6 +33,16 @@ sys.path.insert(0, repo_root)
 
 from utils.tools import dotdict
 from exp.exp_main import Exp_Main
+
+# ---------------------------------------------------------------------------
+# PCA flag: use --pca on the command line, or set manually here
+# ---------------------------------------------------------------------------
+use_pca = "--pca" in sys.argv
+
+if use_pca:
+    print("*** Running with PCA-reduced features ***\n")
+else:
+    print("*** Running with original 66 features ***\n")
 
 # ---------------------------------------------------------------------------
 # Reproducibility
@@ -60,7 +73,6 @@ conditions = [
 # ---------------------------------------------------------------------------
 seq_len = 96          # Input window size (~7.7 seconds at 12.5 Hz)
 pred_len = 12         # Prediction horizon (1 second)
-n_features = 66       # Number of features
 model_name = "DLinear"
 
 # ---------------------------------------------------------------------------
@@ -74,15 +86,25 @@ for cond_info in conditions:
     label = cond_info["label"]
     tag = f"{cohort}_{condition}"
 
-    csv_file = f"{tag}_normalized.csv"
+    if use_pca:
+        csv_file = f"{tag}_normalized_pca.csv"
+    else:
+        csv_file = f"{tag}_normalized.csv"
     csv_path = os.path.join(repo_root, "Analysis_MA", "data", csv_file)
 
     if not os.path.isfile(csv_path):
         print(f"[SKIP] CSV not found for {tag}: {csv_path}")
         continue
 
+    # Detect number of features from CSV header (all columns except 'date')
+    with open(csv_path, "r") as f:
+        header = next(csv.reader(f))
+    n_features = len(header) - 1  # exclude 'date' column
+    target_col = header[-1]       # last feature column (e.g. F66 or PCK)
+
+    mode_str = f"PCA ({n_features} components)" if use_pca else f"{n_features} features"
     print(f"\n{'='*70}")
-    print(f"  Running: {tag} ({label})")
+    print(f"  Running: {tag} ({label}) -- {mode_str}")
     print(f"  Data:    {csv_path}")
     print(f"{'='*70}\n")
 
@@ -91,7 +113,8 @@ for cond_info in conditions:
 
     # Basic configuration
     args.is_training = 1
-    args.model_id = f"MA_{tag}_{seq_len}_{pred_len}"
+    pca_suffix = "_pca" if use_pca else ""
+    args.model_id = f"MA_{tag}{pca_suffix}_{seq_len}_{pred_len}"
     args.model = model_name
     args.train_only = False
 
@@ -100,7 +123,7 @@ for cond_info in conditions:
     args.root_path = os.path.join(repo_root, "Analysis_MA", "data")
     args.data_path = csv_file
     args.features = "M"
-    args.target = "F66"
+    args.target = target_col
     args.freq = "ms"
     args.checkpoints = os.path.join(repo_root, "Analysis_MA", "checkpoints")
 
@@ -119,7 +142,7 @@ for cond_info in conditions:
     # Training parameters
     args.num_workers = 0
     args.itr = 1
-    args.train_epochs = 10
+    args.train_epochs = 50
     args.batch_size = 32
     args.patience = 3
     args.learning_rate = 0.0001
@@ -178,13 +201,15 @@ for cond_info in conditions:
         "label": label,
     }
 
-    # Quick sanity-check plot (feature 5)
+    # Quick sanity-check plot (first feature or feature 5 if available)
+    plot_feat_idx = min(5, preds.shape[2] - 1)
+    feat_label = header[plot_feat_idx + 1]  # +1 to skip 'date'
     fig, ax = plt.subplots(figsize=(10, 3))
-    ax.plot(trues[0, :, 5], label="GroundTruth")
-    ax.plot(preds[0, :, 5], label="Prediction")
-    ax.set_title(f"{tag} ({label}) - Feature 6, sample 0")
+    ax.plot(trues[0, :, plot_feat_idx], label="GroundTruth")
+    ax.plot(preds[0, :, plot_feat_idx], label="Prediction")
+    ax.set_title(f"{tag} ({label}) - {feat_label}, sample 0")
     ax.legend()
-    fig_path = os.path.join(repo_root, "Analysis_MA", f"sanity_{tag}.png")
+    fig_path = os.path.join(repo_root, "Analysis_MA", f"sanity_{tag}{pca_suffix}.png")
     fig.savefig(fig_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     print(f"  Sanity plot saved: {fig_path}")

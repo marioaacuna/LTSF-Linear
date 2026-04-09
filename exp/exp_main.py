@@ -297,7 +297,7 @@ class Exp_Main(Exp_Basic):
         f.write('\n')
         f.close()
 
-        np.save(folder_path + 'metrics.npy', np.array([mae, mse, rmse, mape, mspe,rse, corr]))
+        np.save(folder_path + 'metrics.npy', np.array([mae, mse, rmse, mape, mspe, rse, np.mean(corr)]))
         np.save(folder_path + 'pred.npy', preds)
         np.save(folder_path + 'true.npy', trues)
         # np.save(folder_path + 'x.npy', inputx)
@@ -348,7 +348,10 @@ class Exp_Main(Exp_Basic):
         preds = np.array(preds)
         preds = np.concatenate(preds, axis=0)
         if (pred_data.scale):
+            original_shape = preds.shape
+            preds = preds.reshape(-1, preds.shape[-1])
             preds = pred_data.inverse_transform(preds)
+            preds = preds.reshape(original_shape)
         
         # result save
         folder_path = './results/' + setting + '/'

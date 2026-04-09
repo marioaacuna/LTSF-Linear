@@ -36,3 +36,6 @@ DATA_MA/normalized_data.csv
 results_data/
 
 Analysis_MA/data/*
+
+# PDF files - too large for repo
+*.pdf
